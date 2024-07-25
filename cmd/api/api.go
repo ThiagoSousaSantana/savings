@@ -1,23 +1,22 @@
 package api
 
 import (
-	"database/sql"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/logger"
 
+	"github.com/ThiagoSousaSantana/saving/cmd/db"
 	"github.com/ThiagoSousaSantana/saving/service/expense"
 )
 
 type APIServer struct {
-	addr string
-	db   *sql.DB
+	addr    string
+	queries *db.Queries
 }
 
-func NewAPIServer(addr string, db *sql.DB) *APIServer {
+func NewAPIServer(addr string, queries *db.Queries) *APIServer {
 	return &APIServer{
-		addr: addr,
-		db:   db,
+		addr:    addr,
+		queries: queries,
 	}
 }
 
