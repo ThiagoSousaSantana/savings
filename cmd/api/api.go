@@ -2,7 +2,8 @@ package api
 
 import (
 	"database/sql"
-	"net/http"
+
+	"github.com/gofiber/fiber/v3"
 
 	"github.com/ThiagoSousaSantana/saving/service/expense"
 )
@@ -20,10 +21,10 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 }
 
 func (s *APIServer) Run() error {
-	mux := http.NewServeMux()
+	app := fiber.New()
 
 	expenseHandler := expense.NewHandler()
-	expenseHandler.RegisterRoutes(mux)
+	expenseHandler.RegisterRoutes(app)
 
-	return http.ListenAndServe(s.addr, mux)
+	return app.Listen(s.addr)
 }
