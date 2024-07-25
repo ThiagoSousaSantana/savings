@@ -10,11 +10,11 @@ func NewHandler() *Handler {
 	return &Handler{}
 }
 
-func (h *Handler) RegisterRoutes(app *fiber.App) {
-	app.Post("/expenses", createExpense)
-	app.Get("/expenses", findExpenses)
-	app.Get("/expenses/:id", findExpenseById)
-	app.Delete("/expenses/:id", deleteExpense)
+func (h *Handler) RegisterRoutes(route fiber.Router) {
+	route.Post("/expenses", createExpense)
+	route.Get("/expenses", findExpenses)
+	route.Get("/expenses/:id", findExpenseById)
+	route.Delete("/expenses/:id", deleteExpense)
 }
 
 func createExpense(c fiber.Ctx) error {

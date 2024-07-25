@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/logger"
 
 	"github.com/ThiagoSousaSantana/saving/service/expense"
 )
@@ -22,9 +23,11 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 
 func (s *APIServer) Run() error {
 	app := fiber.New()
+	app.Use(logger.New())
+	v1 := app.Group("/api/v1")
 
 	expenseHandler := expense.NewHandler()
-	expenseHandler.RegisterRoutes(app)
+	expenseHandler.RegisterRoutes(v1)
 
 	return app.Listen(s.addr)
 }
