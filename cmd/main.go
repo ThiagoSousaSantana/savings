@@ -8,7 +8,6 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/ThiagoSousaSantana/saving/cmd/api"
-	"github.com/ThiagoSousaSantana/saving/cmd/db"
 )
 
 func main() {
@@ -21,9 +20,7 @@ func main() {
 	}
 	defer d.Close()
 
-	queries := db.New(d)
-
-	server := api.NewAPIServer(":8080", queries)
+	server := api.NewAPIServer(":8080", d)
 
 	if err := server.Run(); err != nil {
 		log.Fatal("Error initiating server")
