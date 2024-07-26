@@ -2,12 +2,18 @@ package expense
 
 import (
 	"github.com/gofiber/fiber/v3"
+
+	"github.com/ThiagoSousaSantana/saving/cmd/db"
 )
 
-type Handler struct{}
+type Handler struct {
+	queries *db.Queries
+}
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(queries *db.Queries) *Handler {
+	return &Handler{
+		queries: queries,
+	}
 }
 
 func (h *Handler) RegisterRoutes(route fiber.Router) {
