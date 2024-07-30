@@ -1,6 +1,8 @@
 package expense
 
 import (
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v3"
 
 	"github.com/ThiagoSousaSantana/saving/cmd/db"
@@ -23,7 +25,18 @@ func (h *Handler) RegisterRoutes(route fiber.Router) {
 	route.Delete("/expenses/:id", deleteExpense)
 }
 
-func createExpense(c fiber.Ctx) error {
+func (s *Handler) createExpense(c fiber.Ctx) error {
+	var expense db.CreateExpenseParams
+	err := json.NewDecoder(c.Body()).Decode(&expense)
+	if err != nil {
+		return err
+	}
+
+	err = s.queries.CreateExpense(c.Context(), expense)
+	if err != nil {
+		return err
+	}
+
 	return c.SendString("Expense created")
 }
 
