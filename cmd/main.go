@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/ThiagoSousaSantana/saving/cmd/config"
 	"github.com/ThiagoSousaSantana/saving/cmd/routes"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
@@ -17,6 +18,7 @@ func main() {
 			return &fxevent.ZapLogger{Logger: log}
 		}),
 		fx.Provide(
+			config.NewConfig,
 			NewHttpServer,
 			fx.Annotate(
 				NewServeMux,
@@ -30,8 +32,8 @@ func main() {
 	).Run()
 }
 
-func NewHttpServer(lc fx.Lifecycle, mux *http.ServeMux, log *zap.Logger) *http.Server {
-	srv := &http.Server{Addr: ":8080", Handler: mux}
+func NewHttpServer(lc fx.Lifecycle, mux *http.ServeMux, log *zap.Logger, config *config.Config) *http.Server {
+	srv := &http.Server{Addr: ":" + config.API.Port, Handler: mux}
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
@@ -39,7 +41,7 @@ func NewHttpServer(lc fx.Lifecycle, mux *http.ServeMux, log *zap.Logger) *http.S
 			if err != nil {
 				return err
 			}
-			log.Info("Server started", zap.String("address", ln.Addr().String()))
+			log.Info("Server started", zap.String("port", ln.Addr().String()))
 
 			go srv.Serve(ln)
 			return nil
