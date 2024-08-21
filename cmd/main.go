@@ -1,32 +1,72 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
+	"context"
+	"net"
+	"net/http"
 
-	_ "github.com/lib/pq"
-
-	"github.com/ThiagoSousaSantana/saving/cmd/api"
+	"github.com/ThiagoSousaSantana/saving/cmd/routes"
+	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
+	"go.uber.org/zap"
 )
 
 func main() {
-	dbUri := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		"localhost", "5432", "postgres", "postgres", "saving")
+	fx.New(
+		fx.WithLogger(func(log *zap.Logger) fxevent.Logger {
+			return &fxevent.ZapLogger{Logger: log}
+		}),
+		fx.Provide(
+			NewHttpServer,
+			fx.Annotate(
+				NewServeMux,
+				fx.ParamTags(`group:"routes"`),
+			),
+			AsRoute(routes.NewExpenseHandler),
+			AsRoute(routes.NewIncomeHandler),
+			zap.NewDevelopment,
+		),
+		fx.Invoke(func(*http.Server) {}),
+	).Run()
+}
 
-	d, err := sql.Open("postgres", dbUri)
-	if err != nil {
-		panic(err)
-	}
-	defer d.Close()
-	err = d.Ping()
-	if err != nil {
-		panic(err)
+func NewHttpServer(lc fx.Lifecycle, mux *http.ServeMux, log *zap.Logger) *http.Server {
+	srv := &http.Server{Addr: ":8080", Handler: mux}
+
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			ln, err := net.Listen("tcp", srv.Addr)
+			if err != nil {
+				return err
+			}
+			log.Info("Server started", zap.String("address", ln.Addr().String()))
+
+			go srv.Serve(ln)
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			log.Info("Server stopped", zap.String("address", srv.Addr))
+			return srv.Shutdown(ctx)
+		},
+	})
+
+	return srv
+}
+
+func NewServeMux(routes []routes.Route) *http.ServeMux {
+	mux := http.NewServeMux()
+
+	for _, route := range routes {
+		mux.Handle(route.Pattern(), route)
 	}
 
-	server := api.NewAPIServer(":8080", d)
+	return mux
+}
 
-	if err := server.Run(); err != nil {
-		log.Fatal("Error initiating server")
-	}
+func AsRoute(f any) any {
+	return fx.Annotate(
+		f,
+		fx.As(new(routes.Route)),
+		fx.ResultTags(`group:"routes"`),
+	)
 }
