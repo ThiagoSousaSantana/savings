@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ThiagoSousaSantana/saving/cmd/config"
+	"github.com/ThiagoSousaSantana/saving/cmd/db"
 	"github.com/ThiagoSousaSantana/saving/cmd/routes"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
@@ -26,9 +27,11 @@ func main() {
 			),
 			AsRoute(routes.NewExpenseHandler),
 			AsRoute(routes.NewIncomeHandler),
+			db.NewDB,
 			zap.NewDevelopment,
 		),
 		fx.Invoke(func(*http.Server) {}),
+		fx.Invoke(func(*db.DB) {}),
 	).Run()
 }
 
